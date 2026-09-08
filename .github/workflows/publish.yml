@@ -26,13 +26,12 @@ jobs:
       jobs: ${{ steps.gen.outputs.jobs }}
     steps:
       - uses: actions/checkout@v4
-      # Every directory under packages/ crossed with every line in suites, so
-      # adding either is one file and no change here.
+      # Only the suites: which packages exist, and in what order they have to
+      # be built, is derived from their debian/control by build-order.sh.
       - id: gen
         run: |
-          pkgs=$(ls packages | jq -R . | jq -sc .)
           suites=$(grep -vE '^[[:space:]]*(#|$)' suites | jq -R . | jq -sc .)
-          echo "jobs={\"package\":$pkgs,\"suite\":$suites}" >> "$GITHUB_OUTPUT"
+          echo "jobs={\"suite\":$suites}" >> "$GITHUB_OUTPUT"
 
   build:
     needs: matrix
@@ -44,10 +43,19 @@ jobs:
       matrix: ${{ fromJSON(needs.matrix.outputs.jobs) }}
     steps:
       - uses: actions/checkout@v4
-      - run: scripts/build-package.sh "${{ matrix.package }}" "${{ matrix.suite }}"
+      # One job per suite, every package of that suite built in it, in order.
+      # A package here may build-depend on another here, and build-package.sh
+      # offers what this suite has already built to the next container as a
+      # local repo -- which only works while they share one out/ directory,
+      # so the packages cannot be split across jobs. Suites still run in
+      # parallel; the packages within one take a couple of minutes each.
+      - run: |
+          for pkg in $(scripts/build-order.sh "${{ matrix.suite }}"); do
+              scripts/build-package.sh "$pkg" "${{ matrix.suite }}"
+          done
       - uses: actions/upload-artifact@v4
         with:
-          name: deb-${{ matrix.package }}-${{ matrix.suite }}
+          name: deb-${{ matrix.suite }}
           path: out/
           retention-days: 7
 
