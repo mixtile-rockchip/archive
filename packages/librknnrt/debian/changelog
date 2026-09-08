@@ -1,0 +1,18 @@
+librknnrt (2.3.2-1+rkr7.20250408.e50bab8) UNRELEASED; urgency=medium
+
+  * Built from mixtile-sdk-rk-rknpu2 e50bab83ae3c1a2c93be478a8292f0b04d8ddfc3,
+    the linux-6.1-stan-rkr7 branch of Mixtile's mirror of the Rockchip SDK.
+  * The tree carries no debian/, so all of it is ours. There is also nothing
+    to compile: librknnrt.so is a prebuilt closed-source blob and this
+    package puts it, its headers and rknn_server where they belong.
+  * One package rather than the two radxa-pkg/rknn2 ships. Its
+    rknpu2-rk3588 and rknpu2-rk356x exist because that SDK had two
+    incompatible variants of the library -- its own lintian override says
+    so. This SDK has a single runtime/Linux/librknn_api/aarch64/librknnrt.so
+    for both SoCs; only the models differ, and models are not in here.
+  * The blob's SONAME is librknnrt.so, with no version in it, so the two
+    cannot be co-installed and the bare .so symlink has to live in the
+    runtime package rather than in -dev. radxa's librknnrt.so.1 symlink is
+    left out: nothing records that soname, so nothing looks for it.
+
+ -- Mixtile <dev@mixtile.com>  Tue, 08 Sep 2026 08:00:00 +0000

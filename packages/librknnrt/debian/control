@@ -1,0 +1,49 @@
+Source: librknnrt
+Section: libs
+Priority: optional
+Maintainer: Mixtile <dev@mixtile.com>
+Standards-Version: 4.7.0
+Homepage: https://github.com/airockchip/rknn-toolkit2
+Rules-Requires-Root: no
+Build-Depends: debhelper-compat (= 13)
+
+Package: librknnrt
+Architecture: arm64
+Multi-Arch: same
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Rockchip RKNN runtime for the NPU
+ librknnrt is the userspace runtime for the Rockchip NPU: it loads an .rknn
+ model and runs inference on the RKNPU cores through the kernel's RKNPU
+ driver. It is a closed-source prebuilt library, so there is nothing here to
+ build from source.
+ .
+ The runtime checks the driver it finds and will refuse to run against one it
+ considers too old, so this package and the kernel belong to the same
+ Rockchip baseline. Version 2.3.2 is the one that ships with rkr7.
+ .
+ The library's SONAME carries no version, which is why the bare
+ librknnrt.so symlink is in this package and not in librknnrt-dev: it is
+ the link the dynamic loader follows, not just the one the linker needs.
+
+Package: librknnrt-dev
+Section: libdevel
+Architecture: arm64
+Multi-Arch: same
+Depends: librknnrt (= ${binary:Version}), ${misc:Depends}
+Description: Rockchip RKNN runtime -- development headers
+ rknn_api.h, rknn_matmul_api.h and rknn_custom_op.h, the headers for
+ building against librknnrt.
+ .
+ The library this builds against has an unversioned SONAME, so the .so
+ symlink a linker resolves is the same one the loader needs at run time and
+ lives in librknnrt. This package is headers only.
+
+Package: rknn-server
+Section: misc
+Architecture: arm64
+Depends: librknnrt (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Description: Rockchip RKNN debug server
+ rknn_server runs on the board and lets rknn-toolkit2 on a host machine
+ drive inference over a connection, which is how a model is checked against
+ real hardware before it is deployed. It is a development aid and is in its
+ own package so that installing the runtime does not start a daemon.

@@ -1,0 +1,11 @@
+# Rockchip ships a stripped prebuilt; none of this is ours to change, and
+# radxa-pkg/rknn2 carries the same three overrides for the same blob.
+librknnrt: hardening-no-pie
+librknnrt: hardening-no-relro
+librknnrt: shared-library-lacks-version
+
+# The SONAME is librknnrt.so with no version in it, so there is no soname
+# number for the package name to match, and the bare .so symlink is the one
+# the loader follows rather than a development-only link.
+librknnrt: package-name-doesnt-match-sonames
+librknnrt: non-dev-pkg-with-devel-file

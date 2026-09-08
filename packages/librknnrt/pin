@@ -1,0 +1,6 @@
+# Mixtile's own mirror of the Rockchip SDK, same as the other packages here.
+# The blob at this commit says "librknnrt version: 2.3.2
+# (429f97ae6b@2025-04-09T09:09:27)" and the commit message is
+# "Update RKNN SDK to V2.3.2".
+REPO=https://github.com/mixtile-rockchip/mixtile-sdk-rk-rknpu2.git
+REV=e50bab83ae3c1a2c93be478a8292f0b04d8ddfc3

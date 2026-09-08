@@ -1,0 +1,44 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/architecture.mk
+
+# 2.3.2 out of 2.3.2-1+rkr7.20250408.e50bab8~resolute. Taken from the
+# changelog rather than written twice: the file the blob is installed as
+# carries this number, and a drift between the two would be silent.
+UPSTREAM := $(firstword $(subst -, ,$(shell dpkg-parsechangelog -S Version)))
+
+RT  := runtime/Linux/librknn_api
+SRV := runtime/Linux/rknn_server/aarch64/usr/bin
+LIB := usr/lib/$(DEB_HOST_MULTIARCH)
+
+%:
+	dh $@
+
+# Nothing to configure or compile: librknnrt.so is a prebuilt blob.
+override_dh_auto_configure:
+override_dh_auto_build:
+override_dh_auto_test:
+
+override_dh_auto_install:
+	install -D -m 0644 $(RT)/aarch64/librknnrt.so \
+		debian/librknnrt/$(LIB)/librknnrt.so.$(UPSTREAM)
+	# SONAME is librknnrt.so with no version in it, so this symlink is what
+	# the dynamic loader follows and it belongs in the runtime package.
+	ln -s librknnrt.so.$(UPSTREAM) debian/librknnrt/$(LIB)/librknnrt.so
+	# radxa-pkg/rknn2 debian/rknpu2-rk3588.links ships both of these too.
+	# The non-multiarch path is what Rockchip's own documentation tells
+	# people to use, and librknn_api is the name the 17 example
+	# CMakeLists.txt in this tree still link against.
+	install -d debian/librknnrt/usr/lib
+	ln -s $(DEB_HOST_MULTIARCH)/librknnrt.so.$(UPSTREAM) \
+		debian/librknnrt/usr/lib/librknnrt.so
+	ln -s librknnrt.so.$(UPSTREAM) debian/librknnrt/$(LIB)/librknn_api.so
+	install -D -m 0644 -t debian/librknnrt-dev/usr/include $(RT)/include/*.h
+	install -D -m 0755 -t debian/rknn-server/usr/bin \
+		$(SRV)/rknn_server $(SRV)/start_rknn.sh $(SRV)/restart_rknn.sh
+
+# The blob is stripped already and dh_strip on someone else's binary buys
+# nothing; dh_makeshlibs would write a shlibs entry claiming a version this
+# library does not have.
+override_dh_strip:
+override_dh_makeshlibs:
