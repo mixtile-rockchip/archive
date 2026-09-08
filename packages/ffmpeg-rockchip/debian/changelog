@@ -1,0 +1,14 @@
+ffmpeg-rockchip (8.0.3-1+rkmpp.20260423.6404384) UNRELEASED; urgency=medium
+
+  * Built from nyanmisaka/ffmpeg-rockchip 64043842f83b49a729f0c677fce7196f3eff49e4,
+    the 8.0 branch. 8.0.3 is the RELEASE file at that commit; +rkmpp is the
+    baseline, the fork's six commits on top of upstream ffmpeg that add the
+    MPP hwcontext, the decoders, the encoders, the RGA filters and NV15/NV20.
+  * The tree carries no debian/, so all of it is ours.
+  * libav* are linked in statically, so this package ships no shared library
+    and cannot shadow the distro's libavcodec.so.62. That matters: 135
+    packages in the Ubuntu archive link against it, 12 of them installed on a
+    desktop image, and replacing it would put us on the hook for matching
+    Ubuntu's whole feature set and for its ffmpeg CVE rebases.
+
+ -- Mixtile <dev@mixtile.com>  Tue, 08 Sep 2026 07:00:00 +0000

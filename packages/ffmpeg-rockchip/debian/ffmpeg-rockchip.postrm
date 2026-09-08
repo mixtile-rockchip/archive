@@ -1,0 +1,18 @@
+#!/bin/sh
+set -e
+
+# Only the symlinks that still point at this package's binaries: if something
+# else has since taken /usr/local/bin/ffmpeg, removing this package must not
+# take that with it.
+case "$1" in
+remove|purge)
+    for tool in ffmpeg ffprobe; do
+        link="/usr/local/bin/${tool}"
+        if [ "$(readlink "${link}" 2>/dev/null)" = "/usr/bin/${tool}-rockchip" ]; then
+            rm -f "${link}"
+        fi
+    done
+    ;;
+esac
+
+#DEBHELPER#

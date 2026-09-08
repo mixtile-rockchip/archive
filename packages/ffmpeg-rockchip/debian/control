@@ -1,0 +1,85 @@
+Source: ffmpeg-rockchip
+Section: video
+Priority: optional
+Maintainer: Mixtile <dev@mixtile.com>
+Standards-Version: 4.7.0
+Homepage: https://github.com/nyanmisaka/ffmpeg-rockchip
+Rules-Requires-Root: no
+# Annotated the way jellyfin-ffmpeg's control is: a build dependency here
+# exists only to satisfy one configure switch, and saying which one is what
+# makes the list reviewable when the feature set changes.
+Build-Depends:
+ debhelper-compat (= 13),
+ pkg-config,
+# --enable-rkmpp: configure wants rockchip_mpp.pc and rockchip/rk_mpi.h
+ librockchip-mpp-dev,
+# --enable-rkrga: configure wants librga.pc, rga/RgaApi.h and rga/im2d.h
+ librga-dev,
+# --enable-libdrm, which rkmpp requires: DRM PRIME is how a decoded frame
+# reaches a filter or an encoder without a trip through the CPU
+ libdrm-dev,
+# --enable-gnutls, matching the distro's choice over openssl
+ libgnutls28-dev,
+# --enable-libx264
+ libx264-dev,
+# --enable-libx265
+ libx265-dev,
+# --enable-libvpx
+ libvpx-dev,
+# --enable-libdav1d
+ libdav1d-dev,
+# --enable-libmp3lame
+ libmp3lame-dev,
+# --enable-libopus
+ libopus-dev,
+# --enable-libvorbis
+ libvorbis-dev,
+# --enable-libwebp
+ libwebp-dev,
+# --enable-libass, and the four faces of text shaping it draws through
+ libass-dev,
+# --enable-libfreetype
+ libfreetype-dev,
+# --enable-libfontconfig
+ libfontconfig-dev,
+# --enable-libharfbuzz
+ libharfbuzz-dev,
+# --enable-libfribidi
+ libfribidi-dev,
+# --enable-alsa
+ libasound2-dev,
+# --enable-libpulse
+ libpulse-dev,
+# --enable-libzimg, for the zscale filter
+ libzimg-dev,
+# --enable-libsoxr, for high quality audio resampling
+ libsoxr-dev,
+# --enable-libxml2, which the dash and imf demuxers need
+ libxml2-dev,
+# x11grab, which the distribution's ffmpeg has. These are autodetected, so
+# without them in the list the indev silently does not get built.
+ libxcb1-dev,
+ libxcb-shm0-dev,
+ libxcb-xfixes0-dev,
+ libxcb-shape0-dev
+
+Package: ffmpeg-rockchip
+Architecture: arm64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: ffmpeg with Rockchip MPP and RGA hardware acceleration
+ The ffmpeg and ffprobe command line tools built with --enable-rkmpp and
+ --enable-rkrga, which give them the video decoders and encoders of the
+ Rockchip VPU and the scaling and overlay filters of the RGA 2D engine. On an
+ RK3588 that is ten hardware decoders, three encoders and three filters, at a
+ fraction of the CPU a software transcode costs.
+ .
+ ffmpeg has no plugin ABI for codecs, so this cannot be a plugin for the
+ ffmpeg the distribution ships: --enable-rkmpp is decided when ffmpeg is
+ configured, and a separate build is the only way to have it.
+ .
+ The libav* libraries are linked into the two binaries rather than shipped, so
+ this package installs no shared library and cannot come between the
+ distribution's libavcodec and the many packages that link against it. The
+ binaries are installed as ffmpeg-rockchip and ffprobe-rockchip; symlinks in
+ /usr/local/bin, created on install and removed again on removal, are what
+ make the plain names resolve here.

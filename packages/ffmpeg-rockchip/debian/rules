@@ -1,0 +1,101 @@
+#!/usr/bin/make -f
+
+# --enable-static --disable-shared is ffmpeg's own default, and that default is
+# the whole reason this package is safe to install alongside the distribution's
+# ffmpeg: with libav* linked into the binaries there is no libavcodec.so.62
+# here to come between the distribution's and the 135 packages that link
+# against it. Stated rather than inherited, because flipping it to shared
+# later would silently turn this into a replacement for the system ffmpeg.
+#
+# --prefix is set for tidiness only. This package never runs "make install":
+# the two binaries are installed by hand below, and the static .a files and
+# headers a real install would leave behind are not wanted.
+CONFIG := \
+	--prefix=/usr \
+	--datadir=/usr/share/ffmpeg-rockchip \
+	--enable-static \
+	--disable-shared \
+	--extra-version=rockchip \
+	--disable-ffplay \
+	--disable-sdl2 \
+	--disable-doc \
+	--disable-htmlpages \
+	--disable-manpages \
+	--disable-podpages \
+	--disable-txtpages \
+	--enable-rkmpp \
+	--enable-rkrga \
+	--enable-libdrm \
+	--enable-gpl \
+	--enable-version3 \
+	--enable-gnutls \
+	--enable-libx264 \
+	--enable-libx265 \
+	--enable-libvpx \
+	--enable-libdav1d \
+	--enable-libmp3lame \
+	--enable-libopus \
+	--enable-libvorbis \
+	--enable-libwebp \
+	--enable-libass \
+	--enable-libfreetype \
+	--enable-libfontconfig \
+	--enable-libharfbuzz \
+	--enable-libfribidi \
+	--enable-alsa \
+	--enable-libpulse \
+	--enable-libzimg \
+	--enable-libsoxr \
+	--enable-libxml2 \
+	--enable-libxcb \
+	--enable-libxcb-shm \
+	--enable-libxcb-shape \
+	--enable-libxcb-xfixes
+
+# --enable-version3 is not optional here. configure's
+# EXTERNAL_LIBRARY_VERSION3_LIST names both rkmpp and rkrga, so without it
+# configure stops with "rkmpp is version3 and --enable-version3 is not
+# specified". The distribution's ffmpeg takes --enable-gpl alone and it was
+# tempting to match that, but the two switches this package exists for are
+# exactly the ones that forbid it. The binaries are therefore GPL-3 or later,
+# which debian/copyright says.
+#
+# The feature list is a subset of the 54 external libraries the distribution's
+# ffmpeg enables, chosen because /usr/local/bin/ffmpeg resolves here: a script
+# that worked with the distribution's binary and asks for -c:v libx264 or
+# -f pulse has to keep working. What was left out is what nothing on a board
+# reaches for -- bluray, dvdnav, jack, iec61883, openmpt, rabbitmq, zmq, zvbi.
+# The four libxcb switches are there for x11grab, which the distribution's
+# ffmpeg has. They are autodetected rather than required, so the first build
+# of this package quietly came out without the indev at all: what is missing
+# from Build-Depends does not fail, it just disappears. Asking for them
+# explicitly is what makes a missing one an error.
+#
+# The device list is now alsa fbdev kmsgrab lavfi oss pulse v4l2 x11grab
+# against the distribution's, which adds iec61883, jack, libcdio, libdc1394
+# and openal -- firewire, CD audio and jack, none of which an SBC reaches for.
+
+%:
+	dh $@
+
+# ffmpeg's configure is not autoconf and rejects the flags dh_auto_configure
+# passes.
+override_dh_auto_configure:
+	./configure $(CONFIG)
+
+# Only the two tools. A "make install" would also deliver libav*.a and the
+# headers, which are of no use to anyone once the binaries are linked.
+override_dh_auto_install:
+	install -D -m 0755 ffmpeg  debian/ffmpeg-rockchip/usr/bin/ffmpeg-rockchip
+	install -D -m 0755 ffprobe debian/ffmpeg-rockchip/usr/bin/ffprobe-rockchip
+
+# FATE needs a sample tree that is not in the source and is fetched over the
+# network, which a package build has no business doing.
+override_dh_auto_test:
+
+# jellyfin-ffmpeg: debian/rules:97-98 @ 8.1.2-4 does the same thing.
+# dpkg-buildpackage runs "debian/rules clean" first, and ffmpeg ships a
+# top-level Makefile whose second line includes ffbuild/config.mak, which
+# configure has not written yet: make clean exits 2 on an unconfigured tree.
+override_dh_auto_clean:
+	dh_auto_clean || true

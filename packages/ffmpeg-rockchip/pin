@@ -1,0 +1,10 @@
+# nyanmisaka's fork, not a Mixtile mirror: this is not a Rockchip SDK
+# component, and the rkmpp work lives in six commits on top of upstream
+# ffmpeg that we have no reason to carry ourselves.
+#
+# The 8.0 branch rather than 8.1: 8.0 @ 6404384 is what was verified on a
+# blade3 -- ten hardware decoders, three encoders, h264 decode byte-exact
+# against the software decoder over 150 frames, and the three RGA filters.
+# 8.1's tip is the same README commit made 33 seconds later, and unverified.
+REPO=https://github.com/nyanmisaka/ffmpeg-rockchip.git
+REV=64043842f83b49a729f0c677fce7196f3eff49e4

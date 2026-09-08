@@ -1,0 +1,23 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: ffmpeg-rockchip
+Upstream-Contact: https://github.com/nyanmisaka/ffmpeg-rockchip/issues
+Source: https://github.com/nyanmisaka/ffmpeg-rockchip
+
+Files: *
+Copyright: The FFmpeg developers
+License: GPL-3+
+ FFmpeg is licensed LGPL-2.1 or later, with parts of it under GPL-2 or later.
+ This package is configured with --enable-gpl, which links those parts in,
+ and with --enable-version3, which configure requires for rkmpp and rkrga:
+ both are in its EXTERNAL_LIBRARY_VERSION3_LIST. That takes the whole to
+ GPL-3 or later, which is a consequence of the hardware support this package
+ exists for and not a choice that was open.
+ .
+ The full text of the GNU General Public License version 3 is in
+ /usr/share/common-licenses/GPL-3 on a Debian system. The upstream source
+ carries COPYING.GPLv2, COPYING.GPLv3, COPYING.LGPLv2.1, COPYING.LGPLv3 and
+ the per-file headers that say which applies where.
+
+Files: debian/*
+Copyright: 2026 Mixtile
+License: GPL-3+

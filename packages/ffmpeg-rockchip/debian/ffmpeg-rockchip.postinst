@@ -1,0 +1,33 @@
+#!/bin/sh
+set -e
+
+# /usr/bin/ffmpeg is a real file owned by the ffmpeg package and is not
+# registered with update-alternatives, so there is no supported way to take
+# that name in /usr/bin. /usr/local/bin is the administrator's: no dpkg
+# package owns anything under it, and it precedes /usr/bin in every PATH on a
+# Mixtile image -- interactive, login, /etc/environment, systemd services and
+# sudo's secure_path were all checked. A symlink there is therefore what makes
+# a plain "ffmpeg" mean this one, while /usr/bin/ffmpeg stays exactly as the
+# distribution shipped it and apt is free to upgrade or remove it.
+#
+# Debian Policy forbids a package from shipping files under /usr/local.
+# Creating them from a maintainer script and taking them away again, as below,
+# is how it is allowed.
+case "$1" in
+configure)
+    mkdir -p /usr/local/bin
+    for tool in ffmpeg ffprobe; do
+        target="/usr/bin/${tool}-rockchip"
+        link="/usr/local/bin/${tool}"
+        # Anything there that is not a symlink was put there by the
+        # administrator and is none of our business.
+        if [ -e "${link}" ] && [ ! -L "${link}" ]; then
+            echo "ffmpeg-rockchip: ${link} exists and is not a symlink, leaving it alone" >&2
+        else
+            ln -sf "${target}" "${link}"
+        fi
+    done
+    ;;
+esac
+
+#DEBHELPER#
