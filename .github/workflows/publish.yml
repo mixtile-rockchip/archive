@@ -1,0 +1,90 @@
+name: publish
+
+# These packages track an SDK that moves a few times a year, so nothing runs on
+# a schedule: a change to a pin, a changelog or a suite is what publishes.
+on:
+  push:
+    branches: [main]
+    paths: ['packages/**', 'suites', 'scripts/**', 'keyring/**', '.github/workflows/publish.yml']
+  pull_request:
+    paths: ['packages/**', 'suites', 'scripts/**', 'keyring/**', '.github/workflows/publish.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      jobs: ${{ steps.gen.outputs.jobs }}
+    steps:
+      - uses: actions/checkout@v4
+      # Every directory under packages/ crossed with every line in suites, so
+      # adding either is one file and no change here.
+      - id: gen
+        run: |
+          pkgs=$(ls packages | jq -R . | jq -sc .)
+          suites=$(grep -vE '^[[:space:]]*(#|$)' suites | jq -R . | jq -sc .)
+          echo "jobs={\"package\":$pkgs,\"suite\":$suites}" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: matrix
+    # arm64 native. The alternative is qemu, which turns a two-minute build
+    # into most of an hour.
+    runs-on: ubuntu-24.04-arm
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.jobs) }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: scripts/build-package.sh "${{ matrix.package }}" "${{ matrix.suite }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deb-${{ matrix.package }}-${{ matrix.suite }}
+          path: out/
+          retention-days: 7
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04-arm
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { path: out, merge-multiple: true }
+      - run: sudo apt-get update && sudo apt-get install -y apt-utils gpgv
+
+      - name: sign and assemble
+        env:
+          APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+          APT_SIGNING_PASSPHRASE: ${{ secrets.APT_SIGNING_PASSPHRASE }}
+        run: |
+          umask 077
+          printf '%s' "$APT_SIGNING_KEY" | gpg --batch --import
+          printf '%s' "$APT_SIGNING_PASSPHRASE" > "$RUNNER_TEMP/pass"
+          # Signed with whichever key keyring/ holds, so the archive can only
+          # ever be signed by the key the images already trust. build-archive
+          # verifies its own output against that same file.
+          GPG_KEY_ID=$(gpg --show-keys --with-colons keyring/mixtile-archive-keyring.gpg |
+                       awk -F: '/^fpr/{print $10; exit}')
+          GPG_KEY_ID="$GPG_KEY_ID" GPG_PASSPHRASE_FILE="$RUNNER_TEMP/pass" \
+            scripts/build-archive.sh
+          shred -u "$RUNNER_TEMP/pass"
+
+      - uses: actions/configure-pages@v5
+      # Deployed from an artifact rather than committed to a branch: Radxa's
+      # old gh-pages archive reached 7 GB that way and had to be abandoned.
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: public }
+      - id: deploy
+        if: github.event_name != 'pull_request'
+        uses: actions/deploy-pages@v4

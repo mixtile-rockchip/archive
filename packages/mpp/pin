@@ -1,0 +1,4 @@
+# Upstream commit this package is built from. Mixtile's own mirror of the
+# Rockchip SDK, so the coordinate does not depend on Rockchip's servers.
+REPO=https://github.com/mixtile-rockchip/mixtile-sdk-rk-mpp.git
+REV=958803d74e4b53a56fedc1104408bf32a71e22c8

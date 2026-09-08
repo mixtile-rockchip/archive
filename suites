@@ -1,0 +1,4 @@
+# One suite per line. Each is built in a container of that suite: these
+# packages link against its libc, so a resolute build does not install on
+# noble. Adding a line adds a column to the build matrix and a dists/ entry.
+resolute

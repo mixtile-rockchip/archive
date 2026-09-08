@@ -1,0 +1,8 @@
+mpp (1.5.0-1+rkr7.20260226.958803d) UNRELEASED; urgency=medium
+
+  * Built from mixtile-sdk-rk-mpp 958803d74e4b53a56fedc1104408bf32a71e22c8,
+    the linux-6.1-stan-rkr7 branch of Mixtile's mirror of the Rockchip SDK.
+  * The tree carries its own debian/ and is built from it unchanged; this
+    changelog is the only file laid over it.
+
+ -- Mixtile <dev@mixtile.com>  Tue, 08 Sep 2026 05:30:00 +0000
