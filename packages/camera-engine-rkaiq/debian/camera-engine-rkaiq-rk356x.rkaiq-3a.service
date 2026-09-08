@@ -1,0 +1,12 @@
+[Unit]
+Description=Rockchip ISP 3A daemon
+Documentation=https://github.com/rockchip-linux/camera_engine_rkaiq
+# No ISP media device means no sensor pipeline to drive, so there is nothing
+# for the daemon to do and it should not be restarted in a loop.
+ConditionPathExistsGlob=/dev/media*
+
+[Service]
+ExecStart=/usr/bin/rkaiq_3A_server
+
+[Install]
+WantedBy=multi-user.target

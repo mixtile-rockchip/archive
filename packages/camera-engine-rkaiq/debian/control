@@ -1,0 +1,59 @@
+Source: camera-engine-rkaiq
+Section: libs
+Priority: optional
+Maintainer: Mixtile <dev@mixtile.com>
+Standards-Version: 4.7.0
+Homepage: https://github.com/rockchip-linux/camera_engine_rkaiq
+Rules-Requires-Root: no
+Build-Depends:
+ debhelper-compat (= 13),
+ cmake,
+ ninja-build,
+ pkg-config,
+# libdrm: rkaiq opens the DRM device to allocate buffers. Only drmOpen, not
+# the auth API, which is why the patched libdrm Rockchip ships is not needed.
+ libdrm-dev,
+# m4 generates rkaiq/iq_parser_v2/RkAiqCalibDbTypesV2_M4.h from a .m4 template
+ m4,
+# xxd turns the binary IQ blob into j2s_code2bin.h. It used to come with
+# vim-common and is its own package now.
+ xxd
+
+Package: camera-engine-rkaiq-rk3588
+Architecture: arm64
+Provides: camera-engine-rkaiq
+Conflicts: camera-engine-rkaiq, camera-engine-rkaiq-rk356x
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Rockchip ISP tuning and 3A engine for RK3588
+ rkaiq is the userspace half of the Rockchip ISP: it drives auto exposure,
+ auto white balance and auto focus, and applies the per-sensor tuning that
+ turns raw sensor output into a usable image. rkaiq_3A_server is the daemon
+ that does it, and /etc/iqfiles holds the tuning.
+ .
+ This is the RK3588 build, ISP hardware version 30. RK3568 needs version 21
+ and is a different package: the libraries are compiled against one ISP
+ register layout or the other, so the two cannot be installed together.
+ .
+ The libraries have unversioned SONAMEs, so the bare .so symlinks are the
+ ones the loader follows and the headers are here rather than in a separate
+ -dev package. Nothing about that is co-installable anyway.
+
+Package: camera-engine-rkaiq-rk356x
+Architecture: arm64
+Provides: camera-engine-rkaiq
+Conflicts: camera-engine-rkaiq, camera-engine-rkaiq-rk3588
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Rockchip ISP tuning and 3A engine for RK3568 and RK3566
+ rkaiq is the userspace half of the Rockchip ISP: it drives auto exposure,
+ auto white balance and auto focus, and applies the per-sensor tuning that
+ turns raw sensor output into a usable image. rkaiq_3A_server is the daemon
+ that does it, and /etc/iqfiles holds the tuning.
+ .
+ This is the RK3568 and RK3566 build, ISP hardware version 21. RK3588 needs
+ version 30 and is a different package: the libraries are compiled against
+ one ISP register layout or the other, so the two cannot be installed
+ together.
+ .
+ The libraries have unversioned SONAMEs, so the bare .so symlinks are the
+ ones the loader follows and the headers are here rather than in a separate
+ -dev package. Nothing about that is co-installable anyway.

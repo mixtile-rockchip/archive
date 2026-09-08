@@ -1,0 +1,8 @@
+# Rockchip's libraries carry SONAMEs with no version in them, so there is no
+# soname for the package name to match and the bare .so symlink is the one
+# the loader follows rather than a development-only link. Same reasoning as
+# librknnrt in this archive, and as radxa-pkg/rknn2 before it.
+camera-engine-rkaiq-rk356x: package-name-doesnt-match-sonames
+camera-engine-rkaiq-rk356x: shared-library-lacks-version
+camera-engine-rkaiq-rk356x: non-dev-pkg-with-devel-file
+camera-engine-rkaiq-rk356x: no-manual-page

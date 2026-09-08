@@ -1,0 +1,123 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/architecture.mk
+
+# One source, two builds. The libraries are compiled against one ISP register
+# layout or the other -- rkaiq/build/linux/envsetup.sh:60-89 is where upstream
+# maps a SoC to its ISP version -- so an RK3588 build and an RK3568 build are
+# different binaries from the same tree, not one binary with a runtime switch.
+SOCS := rk3588 rk356x
+
+LIB := usr/lib/$(DEB_HOST_MULTIARCH)
+
+# Taken from rkaiq/build/linux/make-Makefiles.bash:21-36, minus the parts that
+# only make sense there: it cross-compiles 32-bit ARM from an x86 host with a
+# toolchain path hardcoded to /data/project_codes, and we build native arm64.
+#
+#   CMAKE_POLICY_VERSION_MINIMUM  rk_stream/CMakeLists.txt:11 asks for a cmake
+#                                 older than 3.5 and cmake 4 refuses to
+#                                 pretend, which resolute has.
+#   CMAKE_C_FLAGS=-std=gnu17      gcc 15 defaults to C23, where an empty
+#                                 parameter list means (void). IspFec declares
+#                                 int rk_ispfec_api_vb_init(); in its header
+#                                 and defines it taking an int, which was
+#                                 legal in C17 and is an error now.
+#   RKAIQ_HAVE_FAKECAM            lets the engine come up without a sensor
+#                                 attached, which is the only way anything
+#                                 here can be exercised on a board that has
+#                                 none.
+CMAKE_ARGS = \
+	-G Ninja \
+	-DCMAKE_BUILD_TYPE=MinSizeRel \
+	-DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+	-DCMAKE_C_FLAGS=-std=gnu17 \
+	-DCMAKE_SKIP_RPATH=TRUE \
+	-DARCH=aarch64 \
+	-DRKAIQ_BUILD_BINARY_IQ=ON \
+	-DRKAIQ_USE_RAWSTREAM_LIB=OFF \
+	-DRKAIQ_HAVE_FAKECAM=ON \
+	-DRKAIQ_ENABLE_AF=ON
+
+%:
+	dh $@
+
+# Two things in this tree assume a build host it will not get here, and both
+# are edits rather than flags because of where upstream puts them.
+#
+# rkaiq/cmake/CompileOptions.cmake appends -Werror to CMAKE_C_FLAGS and
+# CMAKE_CXX_FLAGS, so anything passed in those variables lands before it and
+# -Wno-error can never win. gcc 15 has warnings this 2025 tree does not know
+# about -- calloc(sizeof(T), 1) trips -Wcalloc-transposed-args -- and fixing
+# Rockchip's warnings is not this package's job.
+#
+# J2S_HOST_CFLAGS is for the host compiler that builds the j2s parser during
+# the build, and upstream sets it to -m64 -malign-double, which only exist on
+# x86. -malign-double is there to make 32-bit x86 lay doubles out the way
+# 64-bit does; aarch64 already aligns them to 8, so dropping it changes
+# nothing about the structures the generated parser has to agree on.
+override_dh_auto_configure:
+	sed -i 's/ -Werror//g' rkaiq/cmake/CompileOptions.cmake
+	sed -i 's/-m64 -std=gnu99 -malign-double/-std=gnu99/; s/-m32 -std=gnu99 -malign-double/-std=gnu99/' \
+		rkaiq/iq_parser_v2/CMakeLists.txt rkaiq/tools/iq_check/CMakeLists.txt
+	set -e; for soc in $(SOCS); do \
+		case $$soc in \
+			rk3588) isp=-DISP_HW_V30 ;; \
+			rk356x) isp=-DISP_HW_V21 ;; \
+			*) echo "no ISP version for $$soc"; exit 1 ;; \
+		esac; \
+		mkdir -p b-$$soc; \
+		( cd b-$$soc && cmake $(CMAKE_ARGS) \
+			-DRKAIQ_TARGET_SOC=$$soc \
+			-DISP_HW_VERSION=$$isp \
+			-DCMAKE_INSTALL_PREFIX=$(CURDIR)/i-$$soc \
+			$(CURDIR) ); \
+	done
+
+override_dh_auto_build:
+	set -e; for soc in $(SOCS); do ninja -C b-$$soc -j$$(nproc); done
+
+override_dh_auto_test:
+
+override_dh_auto_install:
+	set -e; for soc in $(SOCS); do \
+		ninja -C b-$$soc install; \
+		p=debian/camera-engine-rkaiq-$$soc; \
+		install -d $$p/$(LIB) $$p/usr/bin $$p/usr/include $$p/etc/iqfiles; \
+		install -m 0644 i-$$soc/lib/*.so $$p/$(LIB)/; \
+		install -m 0755 i-$$soc/bin/rkaiq_tool_server $$p/usr/bin/; \
+		install -m 0755 b-$$soc/rkaiq_3A_server/rkaiq_3A_server $$p/usr/bin/; \
+		cp -a i-$$soc/include/. $$p/usr/include/; \
+		cp -a i-$$soc/usr/share/iqfiles/. $$p/etc/iqfiles/; \
+		if [ -d i-$$soc/usr/share/fec_calib ]; then \
+			install -d $$p/usr/share/fec_calib; \
+			cp -a i-$$soc/usr/share/fec_calib/. $$p/usr/share/fec_calib/; \
+		fi; \
+	done
+
+# Everything in this tree wants /etc/iqfiles: rkaiq_3A_server.cpp:33 is
+# #define IQ_PATH "/etc/iqfiles/" and the string is in librkaiq.so as well.
+# The CMake install puts them under share/iqfiles instead, which agrees with
+# nothing that reads them. They go where the code looks, which is also where
+# Rockchip's own deb put them, and being conffiles is right for tuning a site
+# is expected to add its own sensor to.
+
+# rkaiq_3A_server is built but has no install rule of its own upstream, even
+# though the SysV script that starts it does get installed. We install the
+# binary and ship a unit instead of that script.
+#
+# The unit is named rkaiq-3a rather than after the package, so debhelper needs
+# telling: it only picks up debian/<package>.service on its own. radxa-pkg's
+# debian/rules does the same thing for its rknpu2 unit.
+override_dh_installsystemd:
+	dh_installsystemd -pcamera-engine-rkaiq-rk3588 --name=rkaiq-3a
+	dh_installsystemd -pcamera-engine-rkaiq-rk356x --name=rkaiq-3a
+
+override_dh_auto_clean:
+	rm -rf b-rk3588 b-rk356x i-rk3588 i-rk356x
+
+# dh_makeshlibs would write shlibs entries for a version these libraries do
+# not have -- their SONAMEs carry none. Turning it off also drops the
+# ldconfig trigger it would have added, so debian/*.triggers puts that back:
+# without it the four libraries are on disk and absent from ldconfig -p, and
+# only the loader's built-in multiarch path saves them.
+override_dh_makeshlibs:

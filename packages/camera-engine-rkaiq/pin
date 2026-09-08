@@ -1,0 +1,4 @@
+# Mixtile's own mirror of the Rockchip SDK. A 371 MB tree, most of it the
+# per-sensor iq tuning files under rkaiq/iqfiles.
+REPO=https://github.com/mixtile-rockchip/mixtile-sdk-linux-external-camera_engine_rkaiq.git
+REV=7fc74525d99691920a4e92bbfb4ac3a66d0dc554

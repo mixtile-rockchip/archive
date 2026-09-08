@@ -1,0 +1,18 @@
+camera-engine-rkaiq (6.32.0-1+rkr7.20251222.7fc7452) UNRELEASED; urgency=medium
+
+  * Built from mixtile-sdk-linux-external-camera_engine_rkaiq
+    7fc74525d99691920a4e92bbfb4ac3a66d0dc554, the linux-6.1-stan-rkr7 branch
+    of Mixtile's mirror of the Rockchip SDK.
+  * The tree carries no debian/, so all of it is ours.
+  * Two binary packages from one source, -rk3588 and -rk356x, because the
+    libraries are compiled against one ISP register layout or the other:
+    rkaiq/build/linux/envsetup.sh:60-89 maps rk3588 to ISP_HW_V30 and rk356x
+    to ISP_HW_V21. They conflict and both Provides: camera-engine-rkaiq.
+  * The tuning goes to /etc/iqfiles, where rkaiq_3A_server.cpp:33 looks for
+    it, not to the share/iqfiles the CMake install writes -- upstream's
+    install path and upstream's own hardcoded runtime path disagree.
+  * rkaiq_3A_server has no install rule of its own upstream, although the
+    SysV script that starts it does. We install the binary and ship a
+    systemd unit in place of that script.
+
+ -- Mixtile <dev@mixtile.com>  Tue, 08 Sep 2026 09:00:00 +0000
