@@ -1,0 +1,14 @@
+gstreamer1.0-rockchip (1.14-4+rkr7.20250804.0eb19f9) UNRELEASED; urgency=medium
+
+  * Built from mixtile-sdk-linux-gstreamer-rockchip
+    0eb19f99a4cf8c1d07042d542f7785e73aaeb7a2, the linux-6.1-stan-rkr7 branch
+    of Mixtile's mirror of the Rockchip SDK.
+  * The tree carries its own debian/ and is built from it unchanged; this
+    changelog is the only file laid over it. Its rules enables rkximage,
+    rockchipmpp, kmssrc and rga; vpxalphadec is left at upstream's default of
+    off, being a software decoder with no Rockchip hardware behind it.
+  * 1.14 is the version upstream's own changelog carries, last touched in
+    2021; the source has moved on considerably since, which is what the rkr7
+    baseline and the commit in the version record.
+
+ -- Mixtile <dev@mixtile.com>  Tue, 08 Sep 2026 06:30:00 +0000

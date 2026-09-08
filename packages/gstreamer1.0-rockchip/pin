@@ -1,0 +1,4 @@
+# Upstream commit this package is built from. Mixtile's own mirror of the
+# Rockchip SDK, so the coordinate does not depend on Rockchip's servers.
+REPO=https://github.com/mixtile-rockchip/mixtile-sdk-linux-gstreamer-rockchip.git
+REV=0eb19f99a4cf8c1d07042d542f7785e73aaeb7a2
