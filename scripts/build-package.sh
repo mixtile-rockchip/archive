@@ -121,7 +121,16 @@ docker run --rm -v "${PWD}/${WORK}:/w" -w /w/src "${LOCAL[@]}" \
 
 # .ddeb debug symbols are dropped on purpose: several times the size of what
 # they describe, against a 1 GB budget for the whole Pages site.
+#
+# The -build-deps package equivs generates is removed again by mk-build-deps
+# -r above, so it is not here to be moved. Excluding it anyway: the archive
+# staying clean should not rest on that flag, and publishing a metapackage
+# whose only content is this build's dependency list would be silent.
 mkdir -p "out/${SUITE}"
-mv "${WORK}"/*.deb "out/${SUITE}/"
+for deb in "${WORK}"/*.deb; do
+    case "${deb}" in *-build-deps_*.deb) echo "==> skipping $(basename "${deb}")"; continue ;; esac
+    mv "${deb}" "out/${SUITE}/"
+done
+rm -f "${WORK}"/*-build-deps_*.deb
 rm -f "${WORK}"/*.ddeb "${WORK}"/*.buildinfo "${WORK}"/*.changes
 ls -la "out/${SUITE}"/*.deb | awk '{printf "==> %-64s %7.1f KB\n", $9, $5/1024}'
