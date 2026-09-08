@@ -1,8 +1,20 @@
+librga (2.2.0-2+rkr7.20251126.79b3219) UNRELEASED; urgency=medium
+
+  * debian/control: give librga-dev the Depends it has never had upstream.
+    Without it "apt install librga-dev" does not pull librga2, so the
+    /usr/lib/*/librga.so the -dev package ships points at a library that is
+    not installed, and anything linking -lrga fails with
+    "librga not found using pkg-config". Anyone building against this
+    archive hits it; ffmpeg's --enable-rkrga is the first consumer.
+  * Same upstream commit as -1; this is a packaging-only change.
+
+ -- Mixtile <dev@mixtile.com>  Tue, 08 Sep 2026 06:00:00 +0000
+
 librga (2.2.0-1+rkr7.20251126.79b3219) UNRELEASED; urgency=medium
 
   * Built from mixtile-sdk-linux-linux-rga 79b32191a21dba59f59d93f50698aa8e1c3f141a,
     the linux-6.1-stan-rkr7 branch of Mixtile's mirror of the Rockchip SDK.
-  * The tree carries its own debian/ and is built from it unchanged; this
-    changelog is the only file laid over it.
+  * The tree carries its own debian/; the changelog and control are laid
+    over it, everything else is upstream's.
 
  -- Mixtile <dev@mixtile.com>  Tue, 08 Sep 2026 06:00:00 +0000
