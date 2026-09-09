@@ -1,3 +1,19 @@
+camera-engine-rkaiq (6.32.0-2+rkr7.20251222.7fc7452) UNRELEASED; urgency=medium
+
+  * debian/rules: put libdrm's include directory on the search path, and drop
+    the drm/ prefix from the two includes in the tree that carry one. rkaiq's
+    CMake emits -DHAS_LIBDRM and no -I to go with it, so this only ever built
+    because linux-libc-dev ships the kernel's own /usr/include/drm. bookworm's
+    does not -- Debian restored those headers to it only after bookworm, and
+    trixie's has 28 files there against bookworm's none -- so the build failed
+    on xf86drm.h:40's #include <drm.h> and on rkaiq/xcore/drm_buffer.h:23's
+    #include <drm/drm_fourcc.h>. libdrm-dev has both headers under
+    /usr/include/libdrm on every suite, which is what pkg-config reports and
+    what this package's Build-Depends already promises.
+  * Same upstream commit as -1; this is a packaging-only change.
+
+ -- Mixtile <dev@mixtile.com>  Wed, 09 Sep 2026 03:40:00 +0000
+
 camera-engine-rkaiq (6.32.0-1+rkr7.20251222.7fc7452) UNRELEASED; urgency=medium
 
   * Built from mixtile-sdk-linux-external-camera_engine_rkaiq

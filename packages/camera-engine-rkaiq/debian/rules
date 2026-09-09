@@ -10,6 +10,33 @@ SOCS := rk3588 rk356x
 
 LIB := usr/lib/$(DEB_HOST_MULTIARCH)
 
+# rkaiq's CMake never asks pkg-config where libdrm's headers are: the compile
+# line it generates carries -DHAS_LIBDRM and no -I for it. That goes unnoticed
+# on a suite whose linux-libc-dev ships the kernel's own /usr/include/drm,
+# because xf86drm.h:40's #include <drm.h> and rkaiq/xcore/drm_buffer.h:23's
+# #include <drm/drm_fourcc.h> both resolve out of it. bookworm's linux-libc-dev
+# ships nothing there at all -- trixie's has 28 files under that directory and
+# noble's 27, Debian having put the DRM uapi headers back only after bookworm
+# -- and both includes then fail.
+#
+# libdrm-dev puts the same headers in /usr/include/libdrm on every suite, and
+# that is the path pkg-config prints, so asking it is the portable answer and
+# the one this package's Build-Depends on libdrm-dev already promises.
+#
+# CPATH rather than -DCMAKE_C_FLAGS: a -D on the cmake command line replaces
+# the value CMake would otherwise take from the environment, which is where
+# dpkg-buildpackage's hardening flags arrive. CPATH adds a search path for C
+# and C++ alike and leaves every flag variable alone.
+empty :=
+space := $(empty) $(empty)
+export CPATH := $(subst $(space),:,$(patsubst -I%,%,$(shell pkg-config --cflags-only-I libdrm)))
+ifeq ($(CPATH),)
+# An empty CPATH is not nothing: gcc reads an empty element as the current
+# directory, so a pkg-config that came up short would quietly put the build
+# tree on the include path instead of libdrm.
+$(error pkg-config printed no include path for libdrm)
+endif
+
 # Taken from rkaiq/build/linux/make-Makefiles.bash:21-36, minus the parts that
 # only make sense there: it cross-compiles 32-bit ARM from an x86 host with a
 # toolchain path hardcoded to /data/project_codes, and we build native arm64.
@@ -41,7 +68,7 @@ CMAKE_ARGS = \
 %:
 	dh $@
 
-# Two things in this tree assume a build host it will not get here, and both
+# Three things in this tree assume a build host it will not get here, and all
 # are edits rather than flags because of where upstream puts them.
 #
 # rkaiq/cmake/CompileOptions.cmake appends -Werror to CMAKE_C_FLAGS and
@@ -55,10 +82,19 @@ CMAKE_ARGS = \
 # x86. -malign-double is there to make 32-bit x86 lay doubles out the way
 # 64-bit does; aarch64 already aligns them to 8, so dropping it changes
 # nothing about the structures the generated parser has to agree on.
+#
+# <drm/drm.h> and <drm/drm_fourcc.h> name a directory only linux-libc-dev
+# provides, and bookworm's does not. libdrm-dev's copies of those two headers
+# are in /usr/include/libdrm, which CPATH above puts on the search path, so
+# the includes are rewritten to find them there. Only these two lines in the
+# tree spell a drm/ prefix; rkaiq/xcore/drm_device.cpp reaches drm.h through
+# xf86drm.h instead and needs nothing but the path.
 override_dh_auto_configure:
 	sed -i 's/ -Werror//g' rkaiq/cmake/CompileOptions.cmake
 	sed -i 's/-m64 -std=gnu99 -malign-double/-std=gnu99/; s/-m32 -std=gnu99 -malign-double/-std=gnu99/' \
 		rkaiq/iq_parser_v2/CMakeLists.txt rkaiq/tools/iq_check/CMakeLists.txt
+	sed -i 's|<drm/drm_fourcc.h>|<drm_fourcc.h>|' rkaiq/xcore/drm_buffer.h
+	sed -i 's|<drm/drm.h>|<drm.h>|' rkaiq/xcore/drm_buffer.cpp
 	set -e; for soc in $(SOCS); do \
 		case $$soc in \
 			rk3588) isp=-DISP_HW_V30 ;; \
