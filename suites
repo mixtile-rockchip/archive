@@ -2,3 +2,6 @@
 # packages link against its libc, so a resolute build does not install on
 # noble. Adding a line adds a column to the build matrix and a dists/ entry.
 resolute
+noble
+trixie
+bookworm
