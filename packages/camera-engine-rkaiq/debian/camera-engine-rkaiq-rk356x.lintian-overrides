@@ -1,0 +1,4 @@
+camera-engine-rkaiq-rk356x: package-name-doesnt-match-sonames
+camera-engine-rkaiq-rk356x: shared-library-lacks-version
+camera-engine-rkaiq-rk356x: non-dev-pkg-with-devel-file
+camera-engine-rkaiq-rk356x: no-manual-page

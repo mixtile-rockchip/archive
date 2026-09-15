@@ -1,0 +1,23 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: rknpu2
+Source: https://github.com/airockchip/rknn-toolkit2
+
+Files: *
+Copyright: 2024 Rockchip Electronics Co., Ltd.
+License: Rockchip-proprietary
+
+Files: debian/*
+Copyright: 2026 Mixtile
+License: GPL-2+
+ On Debian systems the full text of the GNU General Public License version 2
+ is in /usr/share/common-licenses/GPL-2.
+
+License: Rockchip-proprietary
+ The LICENSE file at the top of the source is a Rockchip copyright statement,
+ not a licence granting redistribution: it disclaims all warranties, puts the
+ burden of obtaining any third-party rights on the receiver, and limits
+ Rockchip's liability to replacing the software or refunding what was paid.
+ It grants no rights explicitly. librknnrt.so and rknn_server are closed
+ source; there is no source to build them from and no licence text to quote
+ beyond that statement, which is reproduced in full in the LICENSE file of
+ the source this package is built from.

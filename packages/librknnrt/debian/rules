@@ -1,0 +1,33 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/architecture.mk
+
+UPSTREAM := $(firstword $(subst -, ,$(shell dpkg-parsechangelog -S Version)))
+
+RT  := runtime/Linux/librknn_api
+SRV := runtime/Linux/rknn_server/aarch64/usr/bin
+LIB := usr/lib/$(DEB_HOST_MULTIARCH)
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+override_dh_auto_build:
+override_dh_auto_test:
+
+override_dh_auto_install:
+	install -D -m 0644 $(RT)/aarch64/librknnrt.so \
+		debian/librknnrt/$(LIB)/librknnrt.so.$(UPSTREAM)
+	ln -s librknnrt.so.$(UPSTREAM) debian/librknnrt/$(LIB)/librknnrt.so
+	install -d debian/librknnrt/usr/lib
+	ln -s $(DEB_HOST_MULTIARCH)/librknnrt.so.$(UPSTREAM) \
+		debian/librknnrt/usr/lib/librknnrt.so
+	ln -s librknnrt.so.$(UPSTREAM) debian/librknnrt/$(LIB)/librknn_api.so
+	install -D -m 0644 -t debian/librknnrt-dev/usr/include $(RT)/include/*.h
+	install -D -m 0755 -t debian/rknn-server/usr/bin \
+		$(SRV)/rknn_server $(SRV)/start_rknn.sh $(SRV)/restart_rknn.sh
+
+# dh_makeshlibs would write a shlibs entry for a version this library does not
+# have; the blob is stripped already.
+override_dh_strip:
+override_dh_makeshlibs:

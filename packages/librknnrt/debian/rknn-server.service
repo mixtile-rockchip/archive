@@ -1,0 +1,9 @@
+[Unit]
+Description=Rockchip RKNN debug server
+Documentation=https://github.com/airockchip/rknn-toolkit2
+
+[Service]
+ExecStart=/usr/bin/rknn_server
+
+[Install]
+WantedBy=multi-user.target

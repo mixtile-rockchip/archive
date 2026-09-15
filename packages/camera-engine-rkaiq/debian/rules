@@ -1,0 +1,88 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/architecture.mk
+
+SOCS := rk3588 rk356x
+
+LIB := usr/lib/$(DEB_HOST_MULTIARCH)
+
+# CPATH= inside the query is required: debhelper re-reads this file to discover
+# its override targets, and without it that second parse computes an empty
+# value, trips the $(error) below, and -- its stderr going to /dev/null --
+# leaves dh believing there are no overrides at all.
+empty :=
+space := $(empty) $(empty)
+export CPATH := $(subst $(space),:,$(patsubst -I%,%,$(shell CPATH= pkg-config --cflags-only-I libdrm)))
+ifeq ($(CPATH),)
+$(error pkg-config printed no include path for libdrm)
+endif
+
+CMAKE_ARGS = \
+	-G Ninja \
+	-DCMAKE_BUILD_TYPE=MinSizeRel \
+	-DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+	-DCMAKE_C_FLAGS=-std=gnu17 \
+	-DCMAKE_SKIP_RPATH=TRUE \
+	-DARCH=aarch64 \
+	-DRKAIQ_BUILD_BINARY_IQ=ON \
+	-DRKAIQ_USE_RAWSTREAM_LIB=OFF \
+	-DRKAIQ_HAVE_FAKECAM=ON \
+	-DRKAIQ_ENABLE_AF=ON
+
+%:
+	dh $@
+
+# The seds are not optional: CompileOptions.cmake appends -Werror after any
+# flag passed in, J2S_HOST_CFLAGS carries x86-only options, and the drm/
+# prefix names a directory only linux-libc-dev provides.
+override_dh_auto_configure:
+	sed -i 's/ -Werror//g' rkaiq/cmake/CompileOptions.cmake
+	sed -i 's/-m64 -std=gnu99 -malign-double/-std=gnu99/; s/-m32 -std=gnu99 -malign-double/-std=gnu99/' \
+		rkaiq/iq_parser_v2/CMakeLists.txt rkaiq/tools/iq_check/CMakeLists.txt
+	sed -i 's|<drm/drm_fourcc.h>|<drm_fourcc.h>|' rkaiq/xcore/drm_buffer.h
+	sed -i 's|<drm/drm.h>|<drm.h>|' rkaiq/xcore/drm_buffer.cpp
+	set -e; for soc in $(SOCS); do \
+		case $$soc in \
+			rk3588) isp=-DISP_HW_V30 ;; \
+			rk356x) isp=-DISP_HW_V21 ;; \
+			*) echo "no ISP version for $$soc"; exit 1 ;; \
+		esac; \
+		mkdir -p b-$$soc; \
+		( cd b-$$soc && cmake $(CMAKE_ARGS) \
+			-DRKAIQ_TARGET_SOC=$$soc \
+			-DISP_HW_VERSION=$$isp \
+			-DCMAKE_INSTALL_PREFIX=$(CURDIR)/i-$$soc \
+			$(CURDIR) ); \
+	done
+
+override_dh_auto_build:
+	set -e; for soc in $(SOCS); do ninja -C b-$$soc -j$$(nproc); done
+
+override_dh_auto_test:
+
+override_dh_auto_install:
+	set -e; for soc in $(SOCS); do \
+		ninja -C b-$$soc install; \
+		p=debian/camera-engine-rkaiq-$$soc; \
+		install -d $$p/$(LIB) $$p/usr/bin $$p/usr/include $$p/etc/iqfiles; \
+		install -m 0644 i-$$soc/lib/*.so $$p/$(LIB)/; \
+		install -m 0755 i-$$soc/bin/rkaiq_tool_server $$p/usr/bin/; \
+		install -m 0755 b-$$soc/rkaiq_3A_server/rkaiq_3A_server $$p/usr/bin/; \
+		cp -a i-$$soc/include/. $$p/usr/include/; \
+		cp -a i-$$soc/usr/share/iqfiles/. $$p/etc/iqfiles/; \
+		if [ -d i-$$soc/usr/share/fec_calib ]; then \
+			install -d $$p/usr/share/fec_calib; \
+			cp -a i-$$soc/usr/share/fec_calib/. $$p/usr/share/fec_calib/; \
+		fi; \
+	done
+
+override_dh_installsystemd:
+	dh_installsystemd -pcamera-engine-rkaiq-rk3588 --name=rkaiq-3a
+	dh_installsystemd -pcamera-engine-rkaiq-rk356x --name=rkaiq-3a
+
+override_dh_auto_clean:
+	rm -rf b-rk3588 b-rk356x i-rk3588 i-rk356x
+
+# dh_makeshlibs would write shlibs entries for a version these libraries do
+# not have; debian/*.triggers puts back the ldconfig trigger it would add.
+override_dh_makeshlibs:

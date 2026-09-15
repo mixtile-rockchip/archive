@@ -1,0 +1,18 @@
+Source: rockchip-multimedia-config
+Section: libs
+Priority: optional
+Maintainer: Mixtile <dev@mixtile.com>
+Standards-Version: 4.7.0
+Rules-Requires-Root: no
+Build-Depends: debhelper-compat (= 13)
+
+Package: rockchip-multimedia-config
+Architecture: all
+Depends: ${misc:Depends}, udev
+Description: udev rules for Rockchip multimedia device permissions
+ The Rockchip VPU, the RGA 2D engine and the dma_heap allocators they share
+ come up owned by root with no group access, so nothing but root can use
+ hardware video decode, encode or 2D acceleration.
+ .
+ This package contains a udev rules file that puts those device nodes in the
+ video group.

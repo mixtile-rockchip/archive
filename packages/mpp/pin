@@ -1,0 +1,3 @@
+REPO=https://github.com/mixtile-rockchip/mixtile-sdk-rk-mpp.git
+BRANCH=linux-6.1-stan-rkr7
+REV=958803d74e4b53a56fedc1104408bf32a71e22c8

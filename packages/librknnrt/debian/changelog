@@ -1,0 +1,9 @@
+librknnrt (2.3.2-1+rkr7.20250408.e50bab8) UNRELEASED; urgency=medium
+
+  * Initial release.
+  * Three binary packages: the runtime, its headers, and rknn-server, so that
+    installing the runtime does not start a daemon.
+  * The SONAME carries no version, so librknnrt.so ships in the runtime
+    package rather than in librknnrt-dev.
+
+ -- Mixtile <dev@mixtile.com>  Tue, 08 Sep 2026 08:00:00 +0000

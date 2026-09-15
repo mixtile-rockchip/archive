@@ -1,0 +1,85 @@
+name: publish
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      jobs: ${{ steps.gen.outputs.jobs }}
+    steps:
+      - uses: actions/checkout@v4
+      # Only the suites; the packages and their order come from build-order.sh.
+      - id: gen
+        run: |
+          suites=$(grep -vE '^[[:space:]]*(#|$)' suites | jq -R . | jq -sc .)
+          echo "jobs={\"suite\":$suites}" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: matrix
+    # arm64 native: qemu turns a two-minute build into most of an hour.
+    runs-on: ubuntu-24.04-arm
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.jobs) }}
+    steps:
+      - uses: actions/checkout@v4
+      # One job per suite, all of its packages built in it, in order. They
+      # share one out/ directory so that build-package.sh can offer the debs
+      # already built to the next container, so they cannot be split up.
+      - run: |
+          for pkg in $(scripts/build-order.sh "${{ matrix.suite }}"); do
+              scripts/build-package.sh "$pkg" "${{ matrix.suite }}"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deb-${{ matrix.suite }}
+          path: out/
+          retention-days: 7
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04-arm
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { path: out, merge-multiple: true }
+      - run: sudo apt-get update && sudo apt-get install -y apt-utils gpgv
+
+      - name: sign and assemble
+        env:
+          APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+          APT_SIGNING_PASSPHRASE: ${{ secrets.APT_SIGNING_PASSPHRASE }}
+        run: |
+          umask 077
+          printf '%s' "$APT_SIGNING_KEY" | gpg --batch --import
+          printf '%s' "$APT_SIGNING_PASSPHRASE" > "$RUNNER_TEMP/pass"
+          # The key id comes from keyring/, so the archive can only ever be
+          # signed by the key the images already trust.
+          GPG_KEY_ID=$(gpg --show-keys --with-colons keyring/mixtile-archive-keyring.gpg |
+                       awk -F: '/^fpr/{print $10; exit}')
+          GPG_KEY_ID="$GPG_KEY_ID" GPG_PASSPHRASE_FILE="$RUNNER_TEMP/pass" \
+            scripts/build-archive.sh
+          shred -u "$RUNNER_TEMP/pass"
+
+      - uses: actions/configure-pages@v5
+      # Deployed from an artifact rather than committed to a branch, which
+      # would grow the repository by the size of the archive on every publish.
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: public }
+      - id: deploy
+        if: github.event_name != 'pull_request'
+        uses: actions/deploy-pages@v4

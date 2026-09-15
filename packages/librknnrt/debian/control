@@ -1,0 +1,42 @@
+Source: librknnrt
+Section: libs
+Priority: optional
+Maintainer: Mixtile <dev@mixtile.com>
+Standards-Version: 4.7.0
+Homepage: https://github.com/airockchip/rknn-toolkit2
+Rules-Requires-Root: no
+Build-Depends: debhelper-compat (= 13)
+
+Package: librknnrt
+Architecture: arm64
+Multi-Arch: same
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Rockchip RKNN runtime for the NPU
+ librknnrt is the userspace runtime for the Rockchip NPU: it loads an .rknn
+ model and runs inference on the RKNPU cores through the kernel's RKNPU
+ driver.
+ .
+ This package contains the runtime library. It has to be kept in step with
+ the kernel's RKNPU driver, which it refuses to run against if too old.
+
+Package: librknnrt-dev
+Section: libdevel
+Architecture: arm64
+Multi-Arch: same
+Depends: librknnrt (= ${binary:Version}), ${misc:Depends}
+Description: Rockchip RKNN runtime -- development headers
+ This package contains rknn_api.h, rknn_matmul_api.h and rknn_custom_op.h,
+ the headers for building against librknnrt. It is headers only: the .so
+ symlink lives in librknnrt.
+
+Package: rknn-server
+Section: misc
+Architecture: arm64
+Depends: librknnrt (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Description: Rockchip RKNN debug server
+ rknn_server runs on the board and lets rknn-toolkit2 on a host machine drive
+ inference over a connection, which is how a model is checked against real
+ hardware before it is deployed.
+ .
+ This package contains the server. It is separate from librknnrt so that
+ installing the runtime does not start a daemon.

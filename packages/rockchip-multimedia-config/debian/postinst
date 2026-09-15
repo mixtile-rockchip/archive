@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+configure)
+    if [ -d /run/udev ]; then
+        udevadm control --reload-rules
+        udevadm trigger
+    fi
+    ;;
+esac
+
+#DEBHELPER#

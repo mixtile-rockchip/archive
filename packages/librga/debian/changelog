@@ -1,0 +1,12 @@
+librga (2.2.0-2+rkr7.20251126.79b3219) UNRELEASED; urgency=medium
+
+  * debian/control: make librga-dev depend on librga2, so the librga.so it
+    ships is not left pointing at a library that need not be installed.
+
+ -- Mixtile <dev@mixtile.com>  Tue, 08 Sep 2026 06:00:00 +0000
+
+librga (2.2.0-1+rkr7.20251126.79b3219) UNRELEASED; urgency=medium
+
+  * Initial release.
+
+ -- Mixtile <dev@mixtile.com>  Tue, 08 Sep 2026 06:00:00 +0000

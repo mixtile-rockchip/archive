@@ -1,0 +1,5 @@
+librknnrt: hardening-no-pie
+librknnrt: hardening-no-relro
+librknnrt: shared-library-lacks-version
+librknnrt: package-name-doesnt-match-sonames
+librknnrt: non-dev-pkg-with-devel-file

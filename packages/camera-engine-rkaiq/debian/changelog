@@ -1,0 +1,16 @@
+camera-engine-rkaiq (6.32.0-2+rkr7.20251222.7fc7452) UNRELEASED; urgency=medium
+
+  * debian/rules: find libdrm's headers through pkg-config instead of relying
+    on the kernel headers in linux-libc-dev. Fixes FTBFS on bookworm.
+
+ -- Mixtile <dev@mixtile.com>  Wed, 09 Sep 2026 03:40:00 +0000
+
+camera-engine-rkaiq (6.32.0-1+rkr7.20251222.7fc7452) UNRELEASED; urgency=medium
+
+  * Initial release.
+  * Two binary packages, -rk3588 and -rk356x: the libraries are built against
+    one ISP register layout or the other and cannot be co-installed.
+  * Install the tuning to /etc/iqfiles, where rkaiq_3A_server looks for it.
+  * Ship a systemd unit in place of upstream's SysV init script.
+
+ -- Mixtile <dev@mixtile.com>  Tue, 08 Sep 2026 09:00:00 +0000

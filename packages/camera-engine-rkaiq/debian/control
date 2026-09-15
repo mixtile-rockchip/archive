@@ -1,0 +1,41 @@
+Source: camera-engine-rkaiq
+Section: libs
+Priority: optional
+Maintainer: Mixtile <dev@mixtile.com>
+Standards-Version: 4.7.0
+Homepage: https://github.com/rockchip-linux/camera_engine_rkaiq
+Rules-Requires-Root: no
+Build-Depends:
+ debhelper-compat (= 13),
+ cmake,
+ ninja-build,
+ pkg-config,
+ libdrm-dev,
+ m4,
+ xxd
+
+Package: camera-engine-rkaiq-rk3588
+Architecture: arm64
+Provides: camera-engine-rkaiq
+Conflicts: camera-engine-rkaiq, camera-engine-rkaiq-rk356x
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Rockchip ISP tuning and 3A engine for RK3588
+ rkaiq is the userspace half of the Rockchip ISP: it drives auto exposure,
+ auto white balance and auto focus, and applies the per-sensor tuning that
+ turns raw sensor output into a usable image. rkaiq_3A_server is the daemon
+ that does it, and /etc/iqfiles holds the tuning.
+ .
+ This package contains the RK3588 build, ISP hardware version 30.
+
+Package: camera-engine-rkaiq-rk356x
+Architecture: arm64
+Provides: camera-engine-rkaiq
+Conflicts: camera-engine-rkaiq, camera-engine-rkaiq-rk3588
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Rockchip ISP tuning and 3A engine for RK3568 and RK3566
+ rkaiq is the userspace half of the Rockchip ISP: it drives auto exposure,
+ auto white balance and auto focus, and applies the per-sensor tuning that
+ turns raw sensor output into a usable image. rkaiq_3A_server is the daemon
+ that does it, and /etc/iqfiles holds the tuning.
+ .
+ This package contains the RK3568 and RK3566 build, ISP hardware version 21.

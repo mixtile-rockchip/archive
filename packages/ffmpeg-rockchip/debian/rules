@@ -1,0 +1,60 @@
+#!/usr/bin/make -f
+
+CONFIG := \
+	--prefix=/usr \
+	--datadir=/usr/share/ffmpeg-rockchip \
+	--enable-static \
+	--disable-shared \
+	--extra-version=rockchip \
+	--disable-ffplay \
+	--disable-sdl2 \
+	--disable-doc \
+	--disable-htmlpages \
+	--disable-manpages \
+	--disable-podpages \
+	--disable-txtpages \
+	--enable-rkmpp \
+	--enable-rkrga \
+	--enable-libdrm \
+	--enable-gpl \
+	--enable-version3 \
+	--enable-gnutls \
+	--enable-libx264 \
+	--enable-libx265 \
+	--enable-libvpx \
+	--enable-libdav1d \
+	--enable-libmp3lame \
+	--enable-libopus \
+	--enable-libvorbis \
+	--enable-libwebp \
+	--enable-libass \
+	--enable-libfreetype \
+	--enable-libfontconfig \
+	--enable-libharfbuzz \
+	--enable-libfribidi \
+	--enable-alsa \
+	--enable-libpulse \
+	--enable-libzimg \
+	--enable-libsoxr \
+	--enable-libxml2 \
+	--enable-libxcb \
+	--enable-libxcb-shm \
+	--enable-libxcb-shape \
+	--enable-libxcb-xfixes
+
+%:
+	dh $@
+
+# ffmpeg's configure is not autoconf and rejects dh_auto_configure's flags.
+override_dh_auto_configure:
+	./configure $(CONFIG)
+
+override_dh_auto_install:
+	install -D -m 0755 ffmpeg  debian/ffmpeg-rockchip/usr/bin/ffmpeg-rockchip
+	install -D -m 0755 ffprobe debian/ffmpeg-rockchip/usr/bin/ffprobe-rockchip
+
+override_dh_auto_test:
+
+# make clean exits 2 on an unconfigured tree, and dpkg-buildpackage cleans first.
+override_dh_auto_clean:
+	dh_auto_clean || true

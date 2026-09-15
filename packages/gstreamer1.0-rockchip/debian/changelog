@@ -1,0 +1,7 @@
+gstreamer1.0-rockchip (1.14-4+rkr7.20250804.0eb19f9) UNRELEASED; urgency=medium
+
+  * Initial release.
+  * Built from upstream's own debian/, which enables rkximage, rockchipmpp,
+    kmssrc and rga. vpxalphadec stays off: it is a software decoder.
+
+ -- Mixtile <dev@mixtile.com>  Tue, 08 Sep 2026 06:30:00 +0000

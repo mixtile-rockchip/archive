@@ -1,0 +1,1 @@
+udev/99-rockchip-device-permissions.rules usr/lib/udev/rules.d

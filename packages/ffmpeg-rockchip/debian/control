@@ -1,0 +1,48 @@
+Source: ffmpeg-rockchip
+Section: video
+Priority: optional
+Maintainer: Mixtile <dev@mixtile.com>
+Standards-Version: 4.7.0
+Homepage: https://github.com/nyanmisaka/ffmpeg-rockchip
+Rules-Requires-Root: no
+Build-Depends:
+ debhelper-compat (= 13),
+ pkg-config,
+ librockchip-mpp-dev,
+ librga-dev,
+ libdrm-dev,
+ libgnutls28-dev,
+ libx264-dev,
+ libx265-dev,
+ libvpx-dev,
+ libdav1d-dev,
+ libmp3lame-dev,
+ libopus-dev,
+ libvorbis-dev,
+ libwebp-dev,
+ libass-dev,
+ libfreetype-dev,
+ libfontconfig-dev,
+ libharfbuzz-dev,
+ libfribidi-dev,
+ libasound2-dev,
+ libpulse-dev,
+ libzimg-dev,
+ libsoxr-dev,
+ libxml2-dev,
+ libxcb1-dev,
+ libxcb-shm0-dev,
+ libxcb-xfixes0-dev,
+ libxcb-shape0-dev
+
+Package: ffmpeg-rockchip
+Architecture: arm64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: ffmpeg with Rockchip MPP and RGA hardware acceleration
+ The ffmpeg and ffprobe command line tools built with --enable-rkmpp and
+ --enable-rkrga, which give them the video decoders and encoders of the
+ Rockchip VPU and the scaling and overlay filters of the RGA 2D engine.
+ .
+ This package contains the two tools, installed as ffmpeg-rockchip and
+ ffprobe-rockchip with symlinks in /usr/local/bin. The libav* libraries are
+ linked in statically, so no shared library is shipped.

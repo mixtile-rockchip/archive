@@ -1,0 +1,4 @@
+camera-engine-rkaiq-rk3588: package-name-doesnt-match-sonames
+camera-engine-rkaiq-rk3588: shared-library-lacks-version
+camera-engine-rkaiq-rk3588: non-dev-pkg-with-devel-file
+camera-engine-rkaiq-rk3588: no-manual-page

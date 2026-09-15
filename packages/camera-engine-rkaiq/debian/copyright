@@ -1,0 +1,19 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: camera_engine_rkaiq
+Source: https://github.com/rockchip-linux/camera_engine_rkaiq
+
+Files: *
+Copyright: Rockchip Electronics Co., Ltd.
+License: Apache-2.0-or-Rockchip-proprietary
+ The NOTICE file at the top of the source is Rockchip's, and parts of the
+ tree carry Apache-2.0 headers while others carry no licence text at all.
+ Several components are shipped as prebuilt objects with no source:
+ libsmartIr, libIspFec's precompiled halves, and the per-sensor AIISP
+ libraries under rkaiq/algos/aiisp. On Debian systems the full text of the
+ Apache License 2.0 is in /usr/share/common-licenses/Apache-2.0.
+
+Files: debian/*
+Copyright: 2026 Mixtile
+License: GPL-2+
+ On Debian systems the full text of the GNU General Public License version 2
+ is in /usr/share/common-licenses/GPL-2.
