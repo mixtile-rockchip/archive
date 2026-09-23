@@ -1,0 +1,17 @@
+Source: firmware-ap6275s
+Section: kernel
+Priority: optional
+Maintainer: Mixtile <dev@mixtile.com>
+Standards-Version: 4.7.0
+Rules-Requires-Root: no
+Build-Depends: debhelper-compat (= 13)
+
+Package: firmware-ap6275s
+Architecture: all
+Depends: ${misc:Depends}
+Description: Binary firmware for the AP6275S WiFi/Bluetooth module
+ The AP6275S is a BCM43752A2 SDIO WiFi and Bluetooth module, used on the
+ Mixtile Edge 2. linux-firmware carries no firmware for it.
+ .
+ This package contains the WiFi firmware, NVRAM and CLM blob for brcmfmac
+ and the Bluetooth patchram for btbcm.
